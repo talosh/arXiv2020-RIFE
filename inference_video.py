@@ -76,7 +76,7 @@ assert (not args.video is None or not args.img is None)
 if not args.img is None:
     args.png = True
 
-from model.RIFE_HD import Model
+from model.RIFE_HDv2 import Model
 model = Model()
 model.load_model(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'train_log'), -1)
 model.eval()
@@ -192,8 +192,12 @@ while True:
         continue
     if ssim < 0.5:
         output = []
+        step = 1 / (2 ** args.exp)
+        alpha = 0
         for i in range((2 ** args.exp) - 1):
-            output.append(I0)
+            alpha += step
+            beta = 1-alpha
+            output.append(torch.from_numpy(np.transpose((cv2.addWeighted(frame[:, :, ::-1], alpha, lastframe[:, :, ::-1], beta, 0)[:, :, ::-1].copy()), (2,0,1))).to(device, non_blocking=True).unsqueeze(0).float() / 255.)
     else:
         output = make_inference(I0, I1, args.exp)
     if args.montage:
